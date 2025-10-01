@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Color Palette & Contrast Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .card {
+            /* Stronger shadow for a lifted, modern look */
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 8px 15px -5px rgba(0, 0, 0, 0.08);
+            border-radius: 0.75rem;
+        }
+        /* Custom range slider styling */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px; /* Slightly larger */
+            width: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -8px; /* Adjusted margin */
+            transition: all 0.2s;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+        input[type=range]:hover::-webkit-slider-thumb {
+            background: #2563eb;
+        }
+        input[type=range] {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        /* Style for the drag/drop slots */
+        .color-slot-border {
+            border-width: 2px;
+            border-style: dashed;
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="min-h-screen p-4 md:p-10">
+        <header class="mb-8 text-center">
+            <!-- Gradient Header for a modern look -->
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
+                🎨 Universal Color Palette & WCAG Tester
+            </h1>
+            <p class="text-gray-600 mt-2">Generate accessible palettes, manipulate color space, and validate contrast ratios instantly.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- --- 1. Generator and Input Panel (Col 1) --- -->
+            <aside class="lg:col-span-1 space-y-6">
+                <!-- Base Color Input Card -->
+                <div class="card bg-white p-6">
+                    <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Base Color Control</h2>
+                    <div class="space-y-4">
+                        <div id="base-color-preview" class="w-full h-16 rounded-lg border-2 border-gray-300" style="background-color: #3b82f6;"></div>
+                        
+                        <!-- HEX Input -->
+                        <label class="block">
+                            <span class="text-sm font-medium text-gray-700">HEX / RGB / HSL</span>
+                            <input type="text" id="hex-input" value="#3b82f6" maxlength="7" 
+                                oninput="handleHexInput(this.value)"
+                                class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 font-mono text-lg">
+                        </label>
+
+                        <!-- RGB Sliders (NEW FEATURE) -->
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-xs font-medium text-gray-600 flex justify-between items-center">
+                                Red (R) <span id="r-value" class="font-mono text-base text-red-600">59</span>
+                            </label>
+                            <input type="range" id="r-slider" min="0" max="255" value="59" oninput="handleRgbSliderChange()" class="w-full">
+                            
+                            <label class="block text-xs font-medium text-gray-600 flex justify-between items-center">
+                                Green (G) <span id="g-value" class="font-mono text-base text-green-600">130</span>
+                            </label>
+                            <input type="range" id="g-slider" min="0" max="255" value="130" oninput="handleRgbSliderChange()" class="w-full">
+                            
+                            <label class="block text-xs font-medium text-gray-600 flex justify-between items-center">
+                                Blue (B) <span id="b-value" class="font-mono text-base text-blue-600">246</span>
+                            </label>
+                            <input type="range" id="b-slider" min="0" max="255" value="246" oninput="handleRgbSliderChange()" class="w-full">
+                        </div>
+
+                        <!-- HSL Output (NEW DISPLAY) -->
+                        <div class="text-sm font-mono text-gray-500 pt-3 border-t">
+                            <span id="hsl-display">HSL: 217°, 91%, 59%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palette Generation Card -->
+                <div class="card bg-white p-6">
+                    <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Palette Generation</h2>
+                    
+                    <label class="block mb-4">
+                        <span class="text-sm font-medium text-gray-700">Generation Method</span>
+                        <select id="generation-method" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="analogous">Analogous (Harmonious)</option>
+                            <option value="complementary">Complementary (High Contrast)</option>
+                            <option value="triadic">Triadic (Balanced)</option>
+                            <option value="shades">Shades (Monochromatic)</option>
+                        </select>
+                    </label>
+
+                    <button onclick="generatePalette()" class="w-full py-3 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition duration-200 shadow-md transform hover:scale-[1.01] active:scale-95">
+                        Generate Palette
+                    </button>
+                </div>
+            </aside>
+
+            <!-- --- 2. Palette Visualization and Tester (Cols 2-3) --- -->
+            <section class="lg:col-span-2 space-y-6">
+                <!-- Palette Visualization Card -->
+                <div class="card bg-white p-6">
+                    <h2 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">Generated Palette</h2>
+                    <div id="palette-display" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <!-- Color Swatches will be rendered here -->
+                        <p class="text-gray-400 p-4 col-span-5 text-center">Enter a base color and click 'Generate Palette'.</p>
+                    </div>
+                </div>
+                
+                <!-- --- 3. WCAG Contrast Tester --- -->
+                <div class="card bg-gray-900 text-white p-6">
+                    <h2 class="text-xl font-bold border-b border-gray-700 pb-3 mb-4">WCAG Contrast Tester</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <!-- Color Slots -->
+                        <div class="space-y-4">
+                            <div class="p-3 rounded-lg border-2 border-dashed border-gray-700 h-24 flex items-center justify-center text-center">
+                                <span class="text-gray-400">Drag & Drop Colors Here</span>
+                            </div>
+                            <!-- Foreground Slot -->
+                            <div id="fg-color-slot" class="p-4 rounded-lg h-32 flex flex-col justify-center items-center cursor-pointer color-slot-border border-white transition hover:border-blue-400" 
+                                draggable="true" ondragover="event.preventDefault()" ondrop="dropColor(event, 'fg')" data-color="#FFFFFF"
+                                style="background-color: #FFFFFF; color: #000000;">
+                                <span class="font-bold text-lg" style="color: #000000;">Foreground Color</span>
+                                <span class="text-sm font-mono" id="fg-color-value">#FFFFFF</span>
+                            </div>
+
+                            <!-- Background Slot -->
+                            <div id="bg-color-slot" class="p-4 rounded-lg h-32 flex flex-col justify-center items-center cursor-pointer color-slot-border border-white transition hover:border-blue-400" 
+                                draggable="true" ondragover="event.preventDefault()" ondrop="dropColor(event, 'bg')" data-color="#000000"
+                                style="background-color: #000000; color: #FFFFFF;">
+                                <span class="font-bold text-lg" style="color: #FFFFFF;">Background Color</span>
+                                <span class="text-sm font-mono" id="bg-color-value">#000000</span>
+                            </div>
+                        </div>
+
+                        <!-- Results and Visualization -->
+                        <div class="md:col-span-2 space-y-4">
+                            <div id="contrast-preview" class="p-8 rounded-lg min-h-32 flex flex-col justify-center transition duration-300 shadow-xl" 
+                                style="background-color: #000000; color: #FFFFFF;">
+                                <p class="text-3xl font-extrabold">Contrast Preview Text</p>
+                                <p class="text-base">Sample subtitle text to test legibility.</p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Contrast Ratio KPI -->
+                                <div class="bg-gray-800 p-4 rounded-lg flex flex-col items-center">
+                                    <p class="text-sm text-gray-400">Contrast Ratio</p>
+                                    <p id="contrast-ratio" class="text-4xl font-extrabold text-blue-400 mt-1">--:1</p>
+                                </div>
+                                <!-- Luminance Values KPI -->
+                                <div class="bg-gray-800 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-400">Luminance (L1 / L2)</p>
+                                    <p id="luminance-values" class="text-xl font-mono mt-1 text-gray-300">-- / --</p>
+                                </div>
+                            </div>
+
+                            <!-- WCAG Pass/Fail Status (Streamlined Display) -->
+                            <div id="wcag-status" class="space-y-3 pt-2">
+                                <h3 class="text-lg font-semibold border-b border-gray-700 pb-1">WCAG 2.1 Compliance:</h3>
+                                <div id="wcag-aa-normal" class="p-3 rounded-lg flex justify-between items-center transition duration-300">
+                                    <span class="font-medium">AA (Normal Text ≥ 4.5:1)</span>
+                                    <div class="flex items-center space-x-2">
+                                        <svg id="aa-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><!-- Placeholder Icon --></svg>
+                                        <span class="px-3 py-1 text-sm font-bold rounded-full">--</span>
+                                    </div>
+                                </div>
+                                <div id="wcag-aaa-normal" class="p-3 rounded-lg flex justify-between items-center transition duration-300">
+                                    <span class="font-medium">AAA (Normal Text ≥ 7.0:1)</span>
+                                    <div class="flex items-center space-x-2">
+                                        <svg id="aaa-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><!-- Placeholder Icon --></svg>
+                                        <span class="px-3 py-1 text-sm font-bold rounded-full">--</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 pt-1">*Large text is typically easier to pass (AA ≥ 3.0:1).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- Core Color Utilities ---
+
+        /** Converts HEX to RGB array [r, g, b]. */
+        const hexToRgb = (hex) => {
+            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + r + g + g + b + b);
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : [0, 0, 0];
+        };
+
+        /** Converts RGB array [r, g, b] to HEX string. */
+        const rgbToHex = (r, g, b) => {
+            const componentToHex = (c) => {
+                const hex = Math.round(c).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            };
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        };
+
+        /** Converts RGB array [r, g, b] to HSL array [h, s, l]. */
+        const rgbToHsl = (r, g, b) => {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0; // achromatic
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+        };
+
+        /** Converts HSL array [h, s, l] to RGB array [r, g, b]. */
+        const hslToRgb = (h, s, l) => {
+            let r, g, b;
+            h /= 360; s /= 100; l /= 100;
+
+            if (s === 0) {
+                r = g = b = l; // achromatic
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        };
+
+        /**
+         * Calculates the relative luminance of an RGB color. (W3C standard)
+         * @param {number[]} rgb - [r, g, b] array.
+         * @returns {number} Luminance (L) from 0 to 1.
+         */
+        const getLuminance = (rgb) => {
+            const [r, g, b] = rgb.map(c => {
+                c /= 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+
+        /**
+         * Calculates the contrast ratio between two colors. (W3C standard)
+         * @param {string} color1 - HEX or RGB string.
+         * @param {string} color2 - HEX or RGB string.
+         * @returns {number} Contrast ratio (e.g., 4.5)
+         */
+        const getContrastRatio = (color1, color2) => {
+            const rgb1 = hexToRgb(color1);
+            const rgb2 = hexToRgb(color2);
+
+            const L1 = getLuminance(rgb1);
+            const L2 = getLuminance(rgb2);
+
+            const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+            return ratio;
+        };
+
+        // --- State and Handlers ---
+
+        let baseHexColor = '#3b82f6';
+        let paletteColors = [baseHexColor]; // Array of HEX strings
+
+        /** Updates the UI elements based on the current baseHexColor. */
+        function updateBaseColorUI(hex) {
+            baseHexColor = hex.startsWith('#') ? hex : '#' + hex;
+            const rgb = hexToRgb(baseHexColor);
+            const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+
+            // Update Preview and HEX Input
+            document.getElementById('base-color-preview').style.backgroundColor = baseHexColor;
+            document.getElementById('hex-input').value = baseHexColor;
+            
+            // Update RGB Sliders
+            document.getElementById('r-slider').value = rgb[0];
+            document.getElementById('g-slider').value = rgb[1];
+            document.getElementById('b-slider').value = rgb[2];
+            
+            // Update RGB/HSL Value Displays
+            document.getElementById('r-value').textContent = rgb[0];
+            document.getElementById('g-value').textContent = rgb[1];
+            document.getElementById('b-value').textContent = rgb[2];
+            document.getElementById('hsl-display').textContent = `HSL: ${h}°, ${s}%, ${l}%`;
+        }
+
+        /** Handles input changes from the HEX field. */
+        function handleHexInput(hex) {
+            // Simple validation and cleanup
+            hex = hex.trim().toUpperCase();
+            if (hex.match(/^#?([0-9A-F]{3}){1,2}$/i)) {
+                updateBaseColorUI(hex);
+            }
+        }
+
+        /** Handles input changes from the RGB sliders. */
+        function handleRgbSliderChange() {
+            const r = parseInt(document.getElementById('r-slider').value);
+            const g = parseInt(document.getElementById('g-slider').value);
+            const b = parseInt(document.getElementById('b-slider').value);
+            
+            const newHex = rgbToHex(r, g, b);
+            updateBaseColorUI(newHex);
+        }
+
+        /** Generates the palette based on the chosen method. */
+        function generatePalette() {
+            const method = document.getElementById('generation-method').value;
+            const baseRgb = hexToRgb(baseHexColor);
+            const [h, s, l] = rgbToHsl(baseRgb[0], baseRgb[1], baseRgb[2]);
+            const newColors = [baseHexColor];
+
+            const generateColor = (hueOffset) => {
+                const newH = (h + hueOffset) % 360;
+                const [r, g, b] = hslToRgb(newH, s, l);
+                return rgbToHex(r, g, b);
+            };
+
+            if (method === 'complementary') {
+                newColors.push(generateColor(180));
+                newColors.push(generateColor(150));
+                newColors.push(generateColor(210));
+                newColors.push(generateColor(0)); // Base color
+            } else if (method === 'triadic') {
+                newColors.push(generateColor(120));
+                newColors.push(generateColor(240));
+                newColors.push(generateColor(10));
+                newColors.push(generateColor(350));
+            } else if (method === 'analogous') {
+                newColors.push(generateColor(30));
+                newColors.push(generateColor(-30));
+                newColors.push(generateColor(60));
+                newColors.push(generateColor(-60));
+            } else if (method === 'shades') {
+                // Monochromatic shades/tints
+                const baseL = l;
+                newColors.push(rgbToHex(...hslToRgb(h, s, Math.min(100, baseL + 15))));
+                newColors.push(rgbToHex(...hslToRgb(h, s, Math.max(0, baseL - 15))));
+                newColors.push(rgbToHex(...hslToRgb(h, s, Math.min(100, baseL + 30))));
+                newColors.push(rgbToHex(...hslToRgb(h, s, Math.max(0, baseL - 30))));
+            }
+
+            // Remove duplicates and ensure 5 colors (or fewer if logic fails)
+            paletteColors = Array.from(new Set(newColors)).slice(0, 5);
+            renderPalette();
+        }
+
+        /** Renders the color swatches in the palette display area. */
+        function renderPalette() {
+            const display = document.getElementById('palette-display');
+            display.innerHTML = '';
+            
+            // Generate 5 swatches
+            for (let i = 0; i < 5; i++) {
+                const hex = paletteColors[i] || '#CCCCCC'; // Fallback color
+                const luminance = getLuminance(hexToRgb(hex));
+                const isLight = luminance > 0.4;
+                const textColor = isLight ? '#000000' : '#FFFFFF';
+
+                const swatch = document.createElement('div');
+                swatch.className = 'card h-32 flex flex-col justify-end p-2 cursor-grab transition duration-150 active:cursor-grabbing hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]';
+                swatch.draggable = true;
+                swatch.style.backgroundColor = hex;
+                swatch.style.color = textColor;
+                swatch.dataset.color = hex;
+                
+                const [h, s, l] = rgbToHsl(hexToRgb(hex)[0], hexToRgb(hex)[1], hexToRgb(hex)[2]);
+
+                swatch.innerHTML = `
+                    <span class="text-xs font-semibold">${i === 0 ? 'BASE' : `Color ${i}`}</span>
+                    <span class="font-mono text-sm">${hex}</span>
+                    <span class="font-mono text-[10px] opacity-75">H:${h}° S:${s}% L:${l}%</span>
+                `;
+                
+                swatch.addEventListener('dragstart', dragStart);
+                display.appendChild(swatch);
+            }
+        }
+
+        /** Sets the color data on drag start. */
+        function dragStart(event) {
+            event.dataTransfer.setData('text/plain', event.target.dataset.color);
+        }
+
+        /** Handles color drop onto the foreground or background slot. */
+        function dropColor(event, slotType) {
+            event.preventDefault();
+            const hex = event.dataTransfer.getData('text/plain');
+            if (!hex) return;
+            
+            const slotElement = document.getElementById(`${slotType}-color-slot`);
+            const valueElement = document.getElementById(`${slotType}-color-value`);
+            const luminance = getLuminance(hexToRgb(hex));
+            const isLight = luminance > 0.4;
+            const textColor = isLight ? '#000000' : '#FFFFFF';
+
+            slotElement.style.backgroundColor = hex;
+            slotElement.style.color = textColor;
+            slotElement.dataset.color = hex;
+            valueElement.textContent = hex;
+
+            // Update nested span text color
+            slotElement.querySelector('span:first-child').style.color = textColor;
+
+            updateContrastTest();
+        }
+
+        /** Renders the icon and color for the WCAG status blocks. */
+        function updateWcagStatusBlock(elementId, ratio, requiredRatio) {
+            const element = document.getElementById(elementId);
+            const statusSpan = element.querySelector('span:last-child');
+            const iconSvg = element.querySelector('svg');
+            
+            const isPass = ratio >= requiredRatio;
+            const status = isPass ? 'PASS' : 'FAIL';
+            const colorClass = isPass ? 'bg-green-600' : 'bg-red-600';
+            const iconPath = isPass 
+                ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.857a.75.75 0 00-1.214-.852l-3.322 3.323-1.428-1.428a.75.75 0 00-1.06 1.06l2 2a.75.75 0 001.06 0l4-4a.75.75 0 00.154-.488z" clip-rule="evenodd" />' // Checkmark
+                : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />'; // X Mark
+
+            element.className = `p-3 rounded-lg flex justify-between items-center transition duration-300 ${isPass ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            statusSpan.textContent = status;
+            statusSpan.className = `px-3 py-1 text-sm font-bold rounded-full text-white ${colorClass}`;
+            iconSvg.innerHTML = iconPath;
+            iconSvg.classList.toggle('text-green-600', isPass);
+            iconSvg.classList.toggle('text-red-600', !isPass);
+        }
+
+        /** Recalculates and updates the WCAG contrast test results. */
+        function updateContrastTest() {
+            const fgHex = document.getElementById('fg-color-slot').dataset.color;
+            const bgHex = document.getElementById('bg-color-slot').dataset.color;
+
+            const ratio = getContrastRatio(fgHex, bgHex);
+            const ratioDisplay = ratio.toFixed(2);
+
+            const L1 = getLuminance(hexToRgb(fgHex));
+            const L2 = getLuminance(hexToRgb(bgHex));
+
+            // Update preview and ratio displays
+            const preview = document.getElementById('contrast-preview');
+            preview.style.backgroundColor = bgHex;
+            preview.style.color = fgHex;
+            document.getElementById('contrast-ratio').textContent = `${ratioDisplay}:1`;
+            document.getElementById('luminance-values').textContent = `${L1.toFixed(3)} / ${L2.toFixed(3)}`;
+
+            // WCAG Thresholds
+            const PASS_AA_NORMAL = 4.5;
+            const PASS_AAA_NORMAL = 7.0;
+            
+            // 1. AA Normal Check (Required ratio 4.5:1)
+            updateWcagStatusBlock('wcag-aa-normal', ratio, PASS_AA_NORMAL);
+            
+            // 2. AAA Normal Check (Required ratio 7.0:1)
+            updateWcagStatusBlock('wcag-aaa-normal', ratio, PASS_AAA_NORMAL);
+        }
+
+        // --- Initialization ---
+        window.onload = () => {
+            // Initialize base color (which triggers all updates)
+            updateBaseColorUI(baseHexColor); 
+            // Initial palette generation
+            generatePalette();
+            // Initial contrast test (uses default white/black)
+            updateContrastTest();
+        };
+
+        // Attach global functions to window
+        window.handleHexInput = handleHexInput;
+        window.handleRgbSliderChange = handleRgbSliderChange;
+        window.generatePalette = generatePalette;
+        window.dropColor = dropColor;
+    </script>
+</body>
+</html>
