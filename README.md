@@ -1,30 +1,49 @@
-🎨 Universal Color Palette Generator & Accessibility Tester
-A single-page utility for developers and designers focused on WCAG compliance.
-This project is a powerful, low-latency web application designed to help users generate, visualize, and validate color palettes against WCAG 2.1 accessibility standards. It demonstrates strong proficiency in vanilla JavaScript for complex calculations and modern UI development using Tailwind CSS.
+🎨 Universal Color Palette & WCAG Contrast Tester
 
-✨ Key Features & Technical Highlights
-WCAG Contrast Calculator: Implements the official W3C algorithm for calculating luminance and the contrast ratio between any two colors.
+This is a portable, single-file web application built with Vanilla JavaScript and HTML that functions as a tool for designers and developers. It allows users to generate harmonious color palettes from a base color and instantly test the contrast ratio of any color pair against WCAG (Web Content Accessibility Guidelines) standards.
 
-Real-time Accessibility Testing: Instantly displays Pass/Fail status for AA and AAA contrast levels for both normal and large text.
+✨ Key Features
 
-HSL-based Generation: Allows users to generate harmonizing palettes (triadic, complementary, analogous) based on a single input Hue.
+Palette Generation: Instantly generates a five-color palette based on standard color theory principles:
 
-Format Conversion: Supports input and output in HEX, RGB, and HSL formats, showing mastery of color space conversions.
+Analogous (Harmonious)
 
-Responsive Grid Visualization: Displays the generated palette in a clear, customizable grid format.
+Complementary (High Contrast)
 
-🛠️ Technology Stack
-Frontend: HTML5, Vanilla JavaScript (High-performance color math)
+Triadic (Balanced)
 
-Styling: Tailwind CSS (For clean, professional, and responsive design)
+Shades (Monochromatic Tints/Shades)
 
-🚀 How to Run the Tool
-This project is designed to run instantly in any modern web browser as a single file.
+Drag-and-Drop Testing: Users can drag any generated color swatch directly into the dedicated Foreground or Background slots in the tester panel.
 
-Open the file: Load /index.html in your browser.
+Real-time WCAG Compliance: Calculates and displays the precise Contrast Ratio (e.g., 4.5:1) and immediately checks against required WCAG thresholds:
 
-Input Color: Enter a base color (HEX or RGB) or adjust the sliders in the generator section.
+AA (Normal Text): Requires a ratio of 4.5:1 or higher.
 
-Generate: Click "Generate Palette" to see suggested harmonious colors.
+AAA (Normal Text): Requires a ratio of 7.0:1 or higher.
 
-Test: Drag and drop colors between the foreground and background slots to instantly check the WCAG contrast ratio.
+Color Conversion Utility: Uses core JavaScript functions for robust color conversions between HEX, RGB, and HSL to ensure accurate palette generation and luminance calculations.
+
+▶️ How to Use
+
+The application is entirely self-contained within the HTML file.
+
+Enter Base Color: In the Base Color Input panel, enter a HEX code (e.g., #3b82f6) or use the color preview box.
+
+Generate Palette: Select a method (Analogous, Complementary, etc.) and click Generate Palette. The swatches will appear in the visualization panel.
+
+Test Contrast:
+
+Drag a color swatch from the Generated Palette into the desired Foreground Color slot.
+
+Drag a second color swatch into the Background Color slot.
+
+Review Results: The WCAG Contrast Tester area updates instantly, showing the calculated ratio and a clear PASS/FAIL status for WCAG AA and AAA compliance.
+
+⚙️ Technology Stack
+
+HTML5 & CSS: Core application structure and custom styling for controls.
+
+Vanilla JavaScript (ES6): All functional logic, including color theory math (hslToRgb, rgbToHsl), luminance calculation (getLuminance), and drag-and-drop handlers.
+
+Tailwind CSS (CDN): Utility-first framework used for clean layout, responsiveness, and aesthetic styling.
