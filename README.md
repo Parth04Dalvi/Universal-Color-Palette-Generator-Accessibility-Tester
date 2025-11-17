@@ -1,6 +1,7 @@
 🎨 Universal Color Palette & WCAG Contrast Tester
 
-<img width="806" height="608" alt="image" src="https://github.com/user-attachments/assets/e7ed9668-75b5-41a1-afff-04cbf3dd5470" />
+
+<img width="806" height="608" alt="image" src="https://github.com/user-attachments/assets/6c640ca3-fe8a-443c-9580-c2fd9269af33" />
 
 This is a portable, single-file web application built with Vanilla JavaScript and HTML that functions as a tool for designers and developers. It allows users to generate harmonious color palettes from a base color and instantly test the contrast ratio of any color pair against WCAG (Web Content Accessibility Guidelines) standards.
 
